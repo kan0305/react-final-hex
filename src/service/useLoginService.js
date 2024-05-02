@@ -4,6 +4,17 @@ import ROUTE from '../utils/route';
 const useLoginService = () => {
     const http = useHttp();
 
+    const checkLogin = async () => {
+        console.log('checkLogin');
+        try {
+            const result = await http.post(ROUTE.ADMIN.CHECK);
+            return result;
+        } catch (error) {
+            console.log(error);
+            return error.response;
+        }
+    };
+
     const login = async (data) => {
         try {
             const result = await http.post(ROUTE.ADMIN.LOGIN, data);
@@ -15,10 +26,11 @@ const useLoginService = () => {
             return result;
         } catch (error) {
             console.log(error);
+            return error.response;
         }
     };
 
-    return { login };
+    return { checkLogin, login };
 };
 
 export default useLoginService;

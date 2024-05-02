@@ -1,14 +1,14 @@
 import { Route, Routes } from 'react-router-dom';
 import Login from './pages/Login';
-import DashBoard from './pages/admin/DashBoard';
 import AdminProduct from './pages/admin/AdminProduct';
+import DashBoard from './pages/admin/DashBoard';
 
 function App() {
     return (
         <div>
             <Routes>
                 <Route path='/login' element={<Login />} />
-                <Route path='/admin/dashboard' element={<DashBoard />}>
+                <Route path='/admin' element={<DashBoard />}>
                     {/* 產品列表 */}
                     <Route path='products' element={<AdminProduct />} />
                 </Route>

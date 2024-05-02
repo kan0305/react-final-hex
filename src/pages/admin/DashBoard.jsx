@@ -1,7 +1,9 @@
 import {
     AppBar,
+    Backdrop,
     Box,
     Button,
+    CircularProgress,
     Divider,
     List,
     ListItem,
@@ -12,8 +14,9 @@ import {
     Typography,
 } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import React from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
+import useLoginService from '../../service/useLoginService';
 
 const theme = createTheme({
     palette: {
@@ -24,6 +27,33 @@ const theme = createTheme({
 });
 
 const DashBoard = () => {
+    const navigator = useNavigate();
+
+    const [isLogin, setIsLogin] = useState(false);
+
+    const checkLoginRef = useRef(null);
+
+    const { checkLogin } = useLoginService();
+
+    // 以 checkLoginRef 紀錄 checkLogin，防止重複渲染
+    if (!checkLoginRef.current) checkLoginRef.current = checkLogin;
+
+    const checkLoginHandler = useCallback(async () => {
+        console.log('checkLoginHandler');
+        const result = await checkLoginRef.current();
+        if (result.data && result.data.success) {
+            setIsLogin(true);
+        } else {
+            alert('請重新登入');
+            setIsLogin(false);
+            navigator('/login');
+        }
+    }, [navigator]);
+
+    useEffect(() => {
+        checkLoginHandler();
+    }, [checkLoginHandler]);
+
     return (
         <ThemeProvider theme={theme}>
             <Box sx={{ flexGrow: 1 }}>
@@ -68,7 +98,13 @@ const DashBoard = () => {
                     </List>
                 </Box>
                 <Box flexGrow={1}>
-                    <Outlet />
+                    {!isLogin ? (
+                        <Backdrop open={!isLogin}>
+                            <CircularProgress color='inherit' />
+                        </Backdrop>
+                    ) : (
+                        <Outlet context={isLogin} />
+                    )}
                 </Box>
             </Stack>
         </ThemeProvider>

@@ -15,8 +15,11 @@ import {
 } from '@mui/material';
 import { useCallback, useEffect } from 'react';
 import useProductService from '../../service/useProductService';
+import { useOutletContext } from 'react-router-dom';
 
 const AdminProduct = () => {
+    const isLogin = useOutletContext();
+
     const { getAllProducts } = useProductService();
 
     const getProducts = useCallback(async () => {
@@ -25,8 +28,10 @@ const AdminProduct = () => {
     }, [getAllProducts]);
 
     useEffect(() => {
-        getProducts();
-    }, [getProducts]);
+        if (isLogin) {
+            getProducts();
+        }
+    }, [isLogin, getProducts]);
 
     const handlePageChange = (event, value) => {
         console.log(event, value);
