@@ -6,10 +6,11 @@ const useProductService = () => {
 
     const getAllProducts = async () => {
         try {
-            const result = await http.get(ROUTES.PRODUCTS.ALL);
+            const result = await http.get(ROUTES.PRODUCTS.LIST);
             return result;
         } catch (error) {
             console.log(error);
+            return error.response;
         }
     };
 

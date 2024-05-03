@@ -2,29 +2,48 @@ import {
     Box,
     Button,
     Divider,
+    Pagination,
     Paper,
     Stack,
     Table,
+    TableBody,
+    TableCell,
     TableContainer,
     TableHead,
-    Typography,
     TableRow,
-    TableCell,
-    TableBody,
-    Pagination,
+    Typography,
 } from '@mui/material';
-import { useCallback, useEffect } from 'react';
-import useProductService from '../../service/useProductService';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import useProductService from '../../service/useProductService';
+import { ProductModal } from '../../components/ProductModal';
 
 const AdminProduct = () => {
     const isLogin = useOutletContext();
 
-    const { getAllProducts } = useProductService();
+    const [products, setProducts] = useState([]);
+
+    const [pagination, setPagination] = useState({});
+
+    const [openModal, setOpenModal] = useState(false);
+
+    const productService = useProductService();
+
+    const getAllProductsRef = useRef(null);
+
+    // 以 getAllProductsRef 紀錄 getAllProducts，防止重複渲染
+    if (!getAllProductsRef.current)
+        getAllProductsRef.current = productService.getAllProducts;
+
+    const getAllProducts = getAllProductsRef.current;
 
     const getProducts = useCallback(async () => {
         const result = await getAllProducts();
-        console.log(result);
+
+        if (result.data && result.data.success) {
+            setProducts(result.data.products);
+            setPagination(result.data.pagination);
+        }
     }, [getAllProducts]);
 
     useEffect(() => {
@@ -37,8 +56,13 @@ const AdminProduct = () => {
         console.log(event, value);
     };
 
+    const handleOpenModal = () => {
+        setOpenModal(true);
+    };
+
     return (
         <Box p={2}>
+            <ProductModal open={openModal} setOpen={setOpenModal} />
             <Typography variant='h3' fontWeight={'bold'} mb={2}>
                 產品列表
             </Typography>
@@ -48,6 +72,7 @@ const AdminProduct = () => {
                     variant='contained'
                     color='warning'
                     sx={{ fontWeight: 'bold' }}
+                    onClick={handleOpenModal}
                 >
                     建立新商品
                 </Button>
@@ -99,43 +124,49 @@ const AdminProduct = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        <TableRow hover>
-                            <TableCell>分類</TableCell>
-                            <TableCell>名稱</TableCell>
-                            <TableCell>售價</TableCell>
-                            <TableCell>啟用</TableCell>
-                            <TableCell>
-                                <Stack direction={'row'} spacing={1}>
-                                    <Button
-                                        variant='contained'
-                                        color='warning'
-                                        sx={{
-                                            fontWeight: 'bold',
-                                            boxShadow: 'none',
-                                        }}
-                                    >
-                                        編輯
-                                    </Button>
-                                    <Button
-                                        variant='outlined'
-                                        color='error'
-                                        sx={{ fontWeight: 'bold' }}
-                                    >
-                                        刪除
-                                    </Button>
-                                </Stack>
-                            </TableCell>
-                        </TableRow>
+                        {products.map((product) => (
+                            <TableRow hover key={product.id}>
+                                <TableCell>{product.category}</TableCell>
+                                <TableCell>{product.title}</TableCell>
+                                <TableCell>{product.price}</TableCell>
+                                <TableCell>
+                                    {product.is_enabled ? '啟用' : '未啟用'}
+                                </TableCell>
+                                <TableCell>
+                                    <Stack direction={'row'} spacing={1}>
+                                        <Button
+                                            variant='contained'
+                                            color='warning'
+                                            sx={{
+                                                fontWeight: 'bold',
+                                                boxShadow: 'none',
+                                            }}
+                                        >
+                                            編輯
+                                        </Button>
+                                        <Button
+                                            variant='outlined'
+                                            color='error'
+                                            sx={{ fontWeight: 'bold' }}
+                                        >
+                                            刪除
+                                        </Button>
+                                    </Stack>
+                                </TableCell>
+                            </TableRow>
+                        ))}
                     </TableBody>
                 </Table>
             </TableContainer>
-            <Pagination
-                count={10}
-                color='warning'
-                shape='rounded'
-                sx={{ mt: 2 }}
-                onChange={handlePageChange}
-            />
+            {pagination && pagination.total_pages > 0 && (
+                <Pagination
+                    count={pagination.total_pages}
+                    color='warning'
+                    shape='rounded'
+                    sx={{ mt: 2 }}
+                    onChange={handlePageChange}
+                />
+            )}
         </Box>
     );
 };
