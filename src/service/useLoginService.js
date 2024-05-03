@@ -30,7 +30,17 @@ const useLoginService = () => {
         }
     };
 
-    return { checkLogin, login };
+    const logout = async () => {
+        try {
+            const result = await http.post(ROUTE.ADMIN.LOGOUT);
+            return result;
+        } catch (error) {
+            console.log(error);
+            return error.response;
+        }
+    };
+
+    return { checkLogin, login, logout };
 };
 
 export default useLoginService;

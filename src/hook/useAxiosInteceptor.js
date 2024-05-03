@@ -12,19 +12,16 @@ const baseRequest = axios.create({
 const useAxiosInterceptor = () => {
     const navigator = useNavigate();
 
-    const token = localStorage.getItem('token');
-
     // Request Success interceptor
-    const reqResInterceptor = useCallback(
-        (config) => {
-            if (token) {
-                config.headers['Authorization'] = token;
-            }
+    const reqResInterceptor = useCallback((config) => {
+        const token = localStorage.getItem('token');
 
-            return config;
-        },
-        [token]
-    );
+        if (token) {
+            config.headers['Authorization'] = token;
+        }
+
+        return config;
+    }, []);
 
     // Request Error interceptor
     const reqErrInterceptor = useCallback(
@@ -73,7 +70,6 @@ const useAxiosInterceptor = () => {
             baseRequest.interceptors.response.eject(resInteceptor);
         };
     }, [
-        token,
         reqResInterceptor,
         reqErrInterceptor,
         resResInterceptor,

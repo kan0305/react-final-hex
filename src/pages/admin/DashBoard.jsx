@@ -33,14 +33,15 @@ const DashBoard = () => {
 
     const checkLoginRef = useRef(null);
 
-    const { checkLogin } = useLoginService();
+    const loginService = useLoginService();
 
     // 以 checkLoginRef 紀錄 checkLogin，防止重複渲染
-    if (!checkLoginRef.current) checkLoginRef.current = checkLogin;
+    if (!checkLoginRef.current) checkLoginRef.current = loginService.checkLogin;
+
+    const checkLogin = checkLoginRef.current;
 
     const checkLoginHandler = useCallback(async () => {
-        console.log('checkLoginHandler');
-        const result = await checkLoginRef.current();
+        const result = await checkLogin();
         if (result.data && result.data.success) {
             setIsLogin(true);
         } else {
@@ -48,7 +49,19 @@ const DashBoard = () => {
             setIsLogin(false);
             navigator('/login');
         }
-    }, [navigator]);
+    }, [checkLogin, navigator]);
+
+    const logoutHandler = async () => {
+        const result = await loginService.logout();
+
+        if (result.data && result.data.success) {
+            alert('登出成功');
+            setIsLogin(false);
+            navigator('/login');
+        } else {
+            alert('登出失敗');
+        }
+    };
 
     useEffect(() => {
         checkLoginHandler();
@@ -70,7 +83,9 @@ const DashBoard = () => {
                         >
                             Uber Eat 後臺管理系統
                         </Typography>
-                        <Button color='inherit'>登出</Button>
+                        <Button color='inherit' onClick={logoutHandler}>
+                            登出
+                        </Button>
                     </Toolbar>
                 </AppBar>
             </Box>
