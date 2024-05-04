@@ -14,7 +14,17 @@ const useProductService = () => {
         }
     };
 
-    return { getAllProducts };
+    const addProduct = async (data) => {
+        try {
+            const result = await http.post(ROUTES.PRODUCTS.ADD, data);
+            return result;
+        } catch (error) {
+            console.log(error);
+            return error.response;
+        }
+    }
+
+    return { getAllProducts, addProduct };
 };
 
 export default useProductService;
