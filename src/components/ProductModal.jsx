@@ -1,6 +1,5 @@
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import {
-    Alert,
     Box,
     Button,
     Checkbox,
@@ -12,12 +11,13 @@ import {
     FormControlLabel,
     Grid,
     InputLabel,
+    OutlinedInput,
     Stack,
     TextField,
     styled,
 } from '@mui/material';
-import { useState, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect, useRef, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import useProductService from '../service/useProductService';
 
 const VisuallyHiddenInput = styled(TextField)({
@@ -32,35 +32,69 @@ const VisuallyHiddenInput = styled(TextField)({
     width: 1,
 });
 
-export const ProductModal = ({ open, setOpen }) => {
-    const [openAlert, setOpenAlert] = useState(false);
-
+export const ProductModal = ({
+    open,
+    setOpen,
+    getProducts,
+    type,
+    tempProduct,
+}) => {
     const [uploadFile, setUploadFile] = useState('');
 
-    const { register, handleSubmit, reset } = useForm({
+    const { handleSubmit, reset, control } = useForm({
         defaultValues: {
             imageUrl: '',
             title: '',
             category: '',
             description: '',
             content: '',
-            price: '',
-            origin_price: '',
+            price: 0,
+            origin_price: 0,
             unit: '',
-            is_enabled: '',
+            is_enabled: true,
         },
     });
+
+    useEffect(() => {
+        if (type === 'edit') {
+            let product = { ...tempProduct };
+            product.is_enabled = product.is_enabled ? true : false;
+            reset(product);
+        } else if (type === 'create') {
+            reset({
+                imageUrl: '',
+                title: '',
+                category: '',
+                description: '',
+                content: '',
+                price: 0,
+                origin_price: 0,
+                unit: '',
+                is_enabled: true,
+            });
+        }
+    }, [type, tempProduct, reset]);
 
     const productService = useProductService();
 
     const addProductRef = useRef(null);
 
+    const editProductRef = useRef(null);
+
+    // 以 addProductRef 紀錄 addProduct，防止重複渲染
     if (!addProductRef.current)
         addProductRef.current = productService.addProduct;
 
+    // 以 editProductRef 紀錄 editProduct，防止重複渲染
+    if (!editProductRef.current)
+        editProductRef.current = productService.editProduct;
+
     const addProduct = addProductRef.current;
 
-    const handleAddProduct = async (formData) => {
+    const editProduct = editProductRef.current;
+
+    const submit = async (formData) => {
+        console.log(formData);
         let postData = { ...formData };
 
         for (const key in postData) {
@@ -70,26 +104,32 @@ export const ProductModal = ({ open, setOpen }) => {
                 postData[key] = Number(postData[key]);
             }
         }
-        
+
         try {
-            const result = await addProduct({ data: postData });
-            console.log(result);
+            let result;
+
+            if (type === 'edit') {
+                result = await editProduct(tempProduct.id, { data: postData });
+            } else if (type === 'create') {
+                result = await addProduct({ data: postData });
+            }
+
+            if (result.data.success) {
+                getProducts();
+            }
         } catch (error) {
             console.log(error);
         } finally {
             setOpen(false);
-            setOpenAlert(false);
             reset();
         }
     };
 
     const handleClose = (e, reason) => {
         if (reason === 'backdropClick') {
-            setOpenAlert(true);
             return;
         } else {
             setOpen(false);
-            setOpenAlert(false);
             reset();
         }
     };
@@ -111,36 +151,35 @@ export const ProductModal = ({ open, setOpen }) => {
             aria-labelledby='modal-modal-title'
             PaperProps={{
                 component: 'form',
-                onSubmit: handleSubmit(handleAddProduct),
+                onSubmit: handleSubmit(submit),
             }}
         >
-            <DialogTitle aria-label='modal-modal-title'>
-                建立新產品
-                {openAlert && (
-                    <Alert severity='error' sx={{ mt: 1 }}>
-                        請輸入產品資訊
-                    </Alert>
-                )}
+            <DialogTitle aria-label='modal-modal-title' fontWeight={'bold'}>
+                {type === 'create' ? '新增產品' : '編輯產品'}
             </DialogTitle>
             <DialogContent aria-label='modal-modal-description'>
                 <Grid container spacing={2}>
                     <Grid item sm={4} xs={12}>
                         <Stack direction={'column'} spacing={1}>
-                            <Box>
-                                <InputLabel htmlFor='image'>
-                                    輸入圖片網址
-                                </InputLabel>
-                                <TextField
-                                    type='url'
-                                    id='image'
-                                    name='imageUrl'
-                                    size='small'
-                                    fullWidth
-                                    variant='outlined'
-                                    placeholder='請輸入圖片連結'
-                                    {...register('imageUrl')}
-                                />
-                            </Box>
+                            <Controller
+                                name='imageUrl'
+                                control={control}
+                                render={({ field }) => (
+                                    <Box>
+                                        <InputLabel htmlFor='imageUrl'>
+                                            輸入圖片網址
+                                        </InputLabel>
+                                        <OutlinedInput
+                                            type='url'
+                                            id='imageUrl'
+                                            size='small'
+                                            fullWidth
+                                            placeholder='請輸入圖片連結'
+                                            {...field}
+                                        />
+                                    </Box>
+                                )}
+                            />
                             <Box>
                                 <InputLabel htmlFor='customFile'>
                                     或上傳圖檔
@@ -169,147 +208,184 @@ export const ProductModal = ({ open, setOpen }) => {
                     </Grid>
                     <Grid item sm={8} xs={12}>
                         <Stack direction={'column'} spacing={2}>
-                            <Box>
-                                <InputLabel htmlFor='title'>標題</InputLabel>
-                                <TextField
-                                    type='text'
-                                    id='title'
-                                    name='title'
-                                    size='small'
-                                    fullWidth
-                                    variant='outlined'
-                                    placeholder='請輸入標題'
-                                    {...register('title')}
-                                />
-                            </Box>
+                            <Controller
+                                name='title'
+                                control={control}
+                                render={({ field }) => (
+                                    <Box>
+                                        <InputLabel htmlFor='title'>
+                                            標題
+                                        </InputLabel>
+                                        <OutlinedInput
+                                            type='text'
+                                            id='title'
+                                            size='small'
+                                            fullWidth
+                                            placeholder='請輸入標題'
+                                            {...field}
+                                        />
+                                    </Box>
+                                )}
+                            />
                             <Grid container justifyContent={'space-between'}>
-                                <Grid
-                                    item
-                                    sm={6}
-                                    xs={12}
-                                    sx={{ pr: { sm: 1, xs: 0 } }}
-                                >
-                                    <InputLabel htmlFor='category'>
-                                        分類
-                                    </InputLabel>
-                                    <TextField
-                                        type='text'
-                                        id='category'
-                                        name='category'
-                                        size='small'
-                                        fullWidth
-                                        variant='outlined'
-                                        placeholder='請輸入分類'
-                                        {...register('category')}
-                                    />
-                                </Grid>
-                                <Grid
-                                    item
-                                    sm={6}
-                                    xs={12}
-                                    sx={{ pl: { sm: 1, xs: 0 } }}
-                                >
-                                    <InputLabel htmlFor='unit'>單位</InputLabel>
-                                    <TextField
-                                        type='text'
-                                        id='unit'
-                                        name='unit'
-                                        size='small'
-                                        fullWidth
-                                        variant='outlined'
-                                        placeholder='請輸入單位'
-                                        {...register('unit')}
-                                    />
-                                </Grid>
+                                <Controller
+                                    name='category'
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Grid
+                                            item
+                                            sm={6}
+                                            xs={12}
+                                            sx={{ pr: { sm: 1, xs: 0 } }}
+                                        >
+                                            <InputLabel htmlFor='category'>
+                                                分類
+                                            </InputLabel>
+                                            <OutlinedInput
+                                                type='text'
+                                                id='category'
+                                                size='small'
+                                                fullWidth
+                                                placeholder='請輸入分類'
+                                                {...field}
+                                            />
+                                        </Grid>
+                                    )}
+                                />
+                                <Controller
+                                    name='unit'
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Grid
+                                            item
+                                            sm={6}
+                                            xs={12}
+                                            sx={{ pl: { sm: 1, xs: 0 } }}
+                                        >
+                                            <InputLabel htmlFor='unit'>
+                                                單位
+                                            </InputLabel>
+                                            <OutlinedInput
+                                                type='text'
+                                                id='unit'
+                                                size='small'
+                                                fullWidth
+                                                placeholder='請輸入單位'
+                                                {...field}
+                                            />
+                                        </Grid>
+                                    )}
+                                />
                             </Grid>
                             <Grid container>
-                                <Grid
-                                    item
-                                    sm={6}
-                                    xs={12}
-                                    sx={{ pr: { sm: 1, xs: 0 } }}
-                                >
-                                    <InputLabel htmlFor='origin_price'>
-                                        原價
-                                    </InputLabel>
-                                    <TextField
-                                        type='number'
-                                        id='origin_price'
-                                        name='origin_price'
-                                        size='small'
-                                        fullWidth
-                                        variant='outlined'
-                                        placeholder='請輸入原價'
-                                        {...register('origin_price', {
-                                            min: 0,
-                                        })}
-                                    />
-                                </Grid>
-                                <Grid
-                                    item
-                                    sm={6}
-                                    xs={12}
-                                    sx={{ pl: { sm: 1, xs: 0 } }}
-                                >
-                                    <InputLabel htmlFor='price'>
-                                        售價
-                                    </InputLabel>
-                                    <TextField
-                                        type='number'
-                                        id='price'
-                                        name='price'
-                                        size='small'
-                                        fullWidth
-                                        variant='outlined'
-                                        placeholder='請輸入售價'
-                                        {...register('price', {
-                                            min: 0,
-                                        })}
-                                    />
-                                </Grid>
+                                <Controller
+                                    name='origin_price'
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Grid
+                                            item
+                                            sm={6}
+                                            xs={12}
+                                            sx={{ pr: { sm: 1, xs: 0 } }}
+                                        >
+                                            <InputLabel htmlFor='origin_price'>
+                                                原價
+                                            </InputLabel>
+                                            <OutlinedInput
+                                                type='number'
+                                                id='origin_price'
+                                                size='small'
+                                                fullWidth
+                                                placeholder='請輸入原價'
+                                                {...field}
+                                            />
+                                        </Grid>
+                                    )}
+                                />
+                                <Controller
+                                    name='price'
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Grid
+                                            item
+                                            sm={6}
+                                            xs={12}
+                                            sx={{ pl: { sm: 1, xs: 0 } }}
+                                        >
+                                            <InputLabel htmlFor='price'>
+                                                售價
+                                            </InputLabel>
+                                            <OutlinedInput
+                                                type='number'
+                                                id='price'
+                                                size='small'
+                                                fullWidth
+                                                placeholder='請輸入售價'
+                                                {...field}
+                                            />
+                                        </Grid>
+                                    )}
+                                />
                             </Grid>
                             <Divider />
-                            <Box>
-                                <InputLabel htmlFor='description'>
-                                    產品描述
-                                </InputLabel>
-                                <TextField
-                                    type='text'
-                                    id='description'
-                                    name='description'
-                                    size='small'
-                                    fullWidth
-                                    variant='outlined'
-                                    placeholder='請輸入產品描述'
-                                    multiline
-                                    rows={4}
-                                    {...register('description')}
-                                />
-                            </Box>
-                            <Box>
-                                <InputLabel htmlFor='content'>
-                                    產品說明
-                                </InputLabel>
-                                <TextField
-                                    type='text'
-                                    id='content'
-                                    name='content'
-                                    size='small'
-                                    fullWidth
-                                    variant='outlined'
-                                    placeholder='請輸入產品說明'
-                                    multiline
-                                    rows={4}
-                                    {...register('content')}
-                                />
-                            </Box>
+                            <Controller
+                                name='description'
+                                control={control}
+                                render={({ field }) => (
+                                    <Box>
+                                        <InputLabel htmlFor='description'>
+                                            產品描述
+                                        </InputLabel>
+                                        <OutlinedInput
+                                            type='text'
+                                            id='description'
+                                            size='small'
+                                            fullWidth
+                                            placeholder='請輸入產品描述'
+                                            multiline
+                                            rows={4}
+                                            {...field}
+                                        />
+                                    </Box>
+                                )}
+                            />
+                            <Controller
+                                name='content'
+                                control={control}
+                                render={({ field }) => (
+                                    <Box>
+                                        <InputLabel htmlFor='content'>
+                                            產品說明
+                                        </InputLabel>
+                                        <OutlinedInput
+                                            type='text'
+                                            id='content'
+                                            size='small'
+                                            fullWidth
+                                            placeholder='請輸入產品說明'
+                                            multiline
+                                            rows={4}
+                                            {...field}
+                                        />
+                                    </Box>
+                                )}
+                            />
                         </Stack>
-                        <FormControlLabel
-                            control={<Checkbox size='small' />}
-                            label='是否啟用'
+                        <Controller
                             name='is_enabled'
-                            id='is_enabled'
-                            {...register('is_enabled')}
+                            control={control}
+                            render={({ field: { value, ...field } }) => (
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            size='small'
+                                            checked={value}
+                                            {...field}
+                                        />
+                                    }
+                                    label='是否啟用'
+                                />
+                            )}
                         />
                     </Grid>
                 </Grid>

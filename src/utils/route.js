@@ -12,6 +12,7 @@ const ROUTES = {
         ALL: `/v2/api/${API_PATH}/admin/products/all`,
         LIST: `/v2/api/${API_PATH}/admin/products`,
         ADD: `/v2/api/${API_PATH}/admin/product`,
+        EDIT: `/v2/api/${API_PATH}/admin/product/`,
     }
 }
 

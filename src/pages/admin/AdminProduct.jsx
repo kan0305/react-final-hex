@@ -27,6 +27,10 @@ const AdminProduct = () => {
 
     const [openModal, setOpenModal] = useState(false);
 
+    const [tempProduct, setTempProduct] = useState({});
+
+    const [type, setType] = useState('');
+
     const productService = useProductService();
 
     const getAllProductsRef = useRef(null);
@@ -56,13 +60,27 @@ const AdminProduct = () => {
         console.log(event, value);
     };
 
-    const handleOpenModal = () => {
+    const handleOpenModal = (type, tempProduct) => {
         setOpenModal(true);
+
+        if (type === 'edit') {
+            setType('edit');
+            setTempProduct(tempProduct);
+        } else if (type === 'create') {
+            setType('create');
+            setTempProduct({});
+        }
     };
 
     return (
         <Box p={2}>
-            <ProductModal open={openModal} setOpen={setOpenModal} />
+            <ProductModal
+                open={openModal}
+                setOpen={setOpenModal}
+                getProducts={getProducts}
+                type={type}
+                tempProduct={tempProduct}
+            />
             <Typography variant='h3' fontWeight={'bold'} mb={2}>
                 產品列表
             </Typography>
@@ -72,7 +90,7 @@ const AdminProduct = () => {
                     variant='contained'
                     color='warning'
                     sx={{ fontWeight: 'bold' }}
-                    onClick={handleOpenModal}
+                    onClick={() => handleOpenModal('create', {})}
                 >
                     建立新商品
                 </Button>
@@ -141,6 +159,9 @@ const AdminProduct = () => {
                                                 fontWeight: 'bold',
                                                 boxShadow: 'none',
                                             }}
+                                            onClick={() =>
+                                                handleOpenModal('edit', product)
+                                            }
                                         >
                                             編輯
                                         </Button>

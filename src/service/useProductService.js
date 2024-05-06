@@ -22,9 +22,19 @@ const useProductService = () => {
             console.log(error);
             return error.response;
         }
-    }
+    };
 
-    return { getAllProducts, addProduct };
+    const editProduct = async (productId, data) => {
+        try {
+            const result = await http.put(ROUTES.PRODUCTS.EDIT, data, { params: { id: productId } });
+            return result;
+        } catch (error) {
+            console.log(error);
+            return error.response;
+        }
+    };
+
+    return { getAllProducts, addProduct, editProduct };
 };
 
 export default useProductService;
