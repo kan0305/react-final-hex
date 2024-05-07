@@ -26,7 +26,7 @@ const useProductService = () => {
 
     const editProduct = async (productId, data) => {
         try {
-            const result = await http.put(ROUTES.PRODUCTS.EDIT, data, { params: { id: productId } });
+            const result = await http.put(ROUTES.PRODUCTS.EDIT + productId, data);
             return result;
         } catch (error) {
             console.log(error);
@@ -34,7 +34,17 @@ const useProductService = () => {
         }
     };
 
-    return { getAllProducts, addProduct, editProduct };
+    const uploadImage = async (data) => {
+        try {
+            const result = await http.post(ROUTES.PRODUCTS.IMAGE, data);
+            return result;
+        } catch (error) {
+            console.log(error);
+            return error.response;
+        }
+    }
+
+    return { getAllProducts, addProduct, editProduct, uploadImage };
 };
 
 export default useProductService;

@@ -13,6 +13,7 @@ const ROUTES = {
         LIST: `/v2/api/${API_PATH}/admin/products`,
         ADD: `/v2/api/${API_PATH}/admin/product`,
         EDIT: `/v2/api/${API_PATH}/admin/product/`,
+        IMAGE: `/v2/api/${API_PATH}/admin/upload`,
     }
 }
 

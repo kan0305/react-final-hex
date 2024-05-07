@@ -3,6 +3,7 @@ import {
     Box,
     Button,
     Checkbox,
+    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
@@ -32,6 +33,12 @@ const VisuallyHiddenInput = styled(TextField)({
     width: 1,
 });
 
+const ImageInput = styled('img')({
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+});
+
 export const ProductModal = ({
     open,
     setOpen,
@@ -39,7 +46,7 @@ export const ProductModal = ({
     type,
     tempProduct,
 }) => {
-    const [uploadFile, setUploadFile] = useState('');
+    const [imageObj, setImageObj] = useState({ loading: false, url: '' });
 
     const { handleSubmit, reset, control } = useForm({
         defaultValues: {
@@ -81,6 +88,8 @@ export const ProductModal = ({
 
     const editProductRef = useRef(null);
 
+    const uploadFileRef = useRef(null);
+
     // 以 addProductRef 紀錄 addProduct，防止重複渲染
     if (!addProductRef.current)
         addProductRef.current = productService.addProduct;
@@ -89,9 +98,37 @@ export const ProductModal = ({
     if (!editProductRef.current)
         editProductRef.current = productService.editProduct;
 
+    // 以 uploadFileRef 紀錄 uploadFile，防止重複渲染
+    if (!uploadFileRef.current)
+        uploadFileRef.current = productService.uploadImage;
+
     const addProduct = addProductRef.current;
 
     const editProduct = editProductRef.current;
+
+    const uploadFile = uploadFileRef.current;
+
+    const handleUploadFile = async (e) => {
+        console.log('upload file');
+
+        setImageObj({ loading: true, url: '' });
+
+        if (!e.target.files) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', e.target.files[0]);
+
+        const result = await uploadFile(formData);
+
+        if (result.data.success) {
+            reset({ imageUrl: result.data.imageUrl });
+            setImageObj({ loading: false, url: result.data.imageUrl });
+        } else {
+            alert('上傳圖片失敗');
+        }
+    };
 
     const submit = async (formData) => {
         console.log(formData);
@@ -129,16 +166,9 @@ export const ProductModal = ({
         if (reason === 'backdropClick') {
             return;
         } else {
+            setImageObj({ loading: false, url: '' });
             setOpen(false);
             reset();
-        }
-    };
-
-    const handleUploadFile = (e) => {
-        console.log('upload file');
-        if (e.target.files) {
-            console.log(e.target.files[0]);
-            setUploadFile(e.target.files[0]);
         }
     };
 
@@ -198,11 +228,24 @@ export const ProductModal = ({
                                         onChange={handleUploadFile}
                                     />
                                 </Button>
-                                {uploadFile && (
-                                    <Box component={'span'} ml={1}>
-                                        {uploadFile.name}
-                                    </Box>
-                                )}
+                                <Box
+                                    width={'100%'}
+                                    height={'150px'}
+                                    lineHeight={'150px'}
+                                    textAlign={'center'}
+                                    mt={1}
+                                    overflow={'hidden'}
+                                    borderRadius={1}
+                                >
+                                    {imageObj.loading && <CircularProgress />}
+
+                                    {imageObj.url && (
+                                        <ImageInput
+                                            src={imageObj.url}
+                                            alt='preview'
+                                        />
+                                    )}
+                                </Box>
                             </Box>
                         </Stack>
                     </Grid>
