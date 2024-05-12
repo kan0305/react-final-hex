@@ -177,7 +177,6 @@ export const ProductModal = ({
             fullWidth
             maxWidth={'md'}
             open={open}
-            onClose={(e, reason) => handleClose(e, reason)}
             aria-labelledby='modal-modal-title'
             PaperProps={{
                 component: 'form',

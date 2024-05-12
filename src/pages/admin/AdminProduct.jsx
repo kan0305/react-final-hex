@@ -12,20 +12,27 @@ import {
     TableHead,
     TableRow,
     Typography,
+    Backdrop,
+    CircularProgress,
 } from '@mui/material';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import useProductService from '../../service/useProductService';
 import { ProductModal } from '../../components/ProductModal';
+import { DeleteModal } from '../../components/DeleteModal';
 
 const AdminProduct = () => {
     const isLogin = useOutletContext();
+
+    const [isLoading, setIsLoading] = useState(false);
 
     const [products, setProducts] = useState([]);
 
     const [pagination, setPagination] = useState({});
 
-    const [openModal, setOpenModal] = useState(false);
+    const [openProductModal, setOpenProductModal] = useState(false);
+
+    const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
     const [tempProduct, setTempProduct] = useState({});
 
@@ -33,35 +40,57 @@ const AdminProduct = () => {
 
     const productService = useProductService();
 
-    const getAllProductsRef = useRef(null);
+    const getProductsRef = useRef(null);
 
-    // 以 getAllProductsRef 紀錄 getAllProducts，防止重複渲染
-    if (!getAllProductsRef.current)
-        getAllProductsRef.current = productService.getAllProducts;
+    const deleteProductRef = useRef(null);
 
-    const getAllProducts = getAllProductsRef.current;
+    // 以 getProductsRef 紀錄 getProducts，防止重複渲染
+    if (!getProductsRef.current)
+        getProductsRef.current = productService.getProducts;
 
-    const getProducts = useCallback(async () => {
-        const result = await getAllProducts();
+    // 以 deleteProductRef 紀錄 deleteProduct，防止重複渲染
+    if (!deleteProductRef.current)
+        deleteProductRef.current = productService.deleteProduct;
+
+    const getProducts = getProductsRef.current;
+
+    const deleteProduct = deleteProductRef.current;
+
+    const getProductsHandler = useCallback(async () => {
+        setIsLoading(true);
+
+        const result = await getProducts();
 
         if (result.data && result.data.success) {
             setProducts(result.data.products);
             setPagination(result.data.pagination);
         }
-    }, [getAllProducts]);
+
+        setIsLoading(false);
+    }, [getProducts]);
+
+    const deleteProductHandler = async (productId) => {
+        const result = await deleteProduct(productId);
+
+        if (result.data.success) {
+            getProductsHandler();
+        } else {
+            alert(result.data.message);
+        }
+    };
 
     useEffect(() => {
         if (isLogin) {
-            getProducts();
+            getProductsHandler();
         }
-    }, [isLogin, getProducts]);
+    }, [isLogin, getProductsHandler]);
 
     const handlePageChange = (event, value) => {
         console.log(event, value);
     };
 
-    const handleOpenModal = (type, tempProduct) => {
-        setOpenModal(true);
+    const handleOpenProductModal = (type, tempProduct) => {
+        setOpenProductModal(true);
 
         if (type === 'edit') {
             setType('edit');
@@ -72,123 +101,161 @@ const AdminProduct = () => {
         }
     };
 
+    const handleOpenDeleteModal = (tempProduct) => {
+        setOpenDeleteModal(true);
+        setTempProduct(tempProduct);
+    };
+
     return (
-        <Box p={2}>
+        <React.Fragment>
             <ProductModal
-                open={openModal}
-                setOpen={setOpenModal}
-                getProducts={getProducts}
+                open={openProductModal}
+                setOpen={setOpenProductModal}
+                getProducts={getProductsHandler}
                 type={type}
                 tempProduct={tempProduct}
             />
-            <Typography variant='h3' fontWeight={'bold'} mb={2}>
-                產品列表
-            </Typography>
-            <Divider />
-            <Stack direction={'row'} justifyContent={'flex-end'} my={2}>
-                <Button
-                    variant='contained'
-                    color='warning'
-                    sx={{ fontWeight: 'bold' }}
-                    onClick={() => handleOpenModal('create', {})}
-                >
-                    建立新商品
-                </Button>
-            </Stack>
-            <TableContainer component={Paper} sx={{ boxShadow: 'none' }}>
-                <Table sx={{ minWidth: 650 }} aria-label='simple table'>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell width={'20%'}>
-                                <Typography
-                                    variant='subtitle1'
-                                    fontWeight={'bold'}
-                                >
-                                    分類
-                                </Typography>
-                            </TableCell>
-                            <TableCell width={'20%'}>
-                                <Typography
-                                    variant='subtitle1'
-                                    fontWeight={'bold'}
-                                >
-                                    名稱
-                                </Typography>
-                            </TableCell>
-                            <TableCell width={'20%'}>
-                                <Typography
-                                    variant='subtitle1'
-                                    fontWeight={'bold'}
-                                >
-                                    售價
-                                </Typography>
-                            </TableCell>
-                            <TableCell width={'20%'}>
-                                <Typography
-                                    variant='subtitle1'
-                                    fontWeight={'bold'}
-                                >
-                                    啟用狀態
-                                </Typography>
-                            </TableCell>
-                            <TableCell width={'20%'}>
-                                <Typography
-                                    variant='subtitle1'
-                                    fontWeight={'bold'}
-                                >
-                                    編輯
-                                </Typography>
-                            </TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {products.map((product) => (
-                            <TableRow hover key={product.id}>
-                                <TableCell>{product.category}</TableCell>
-                                <TableCell>{product.title}</TableCell>
-                                <TableCell>{product.price}</TableCell>
-                                <TableCell>
-                                    {product.is_enabled ? '啟用' : '未啟用'}
-                                </TableCell>
-                                <TableCell>
-                                    <Stack direction={'row'} spacing={1}>
-                                        <Button
-                                            variant='contained'
-                                            color='warning'
-                                            sx={{
-                                                fontWeight: 'bold',
-                                                boxShadow: 'none',
-                                            }}
-                                            onClick={() =>
-                                                handleOpenModal('edit', product)
-                                            }
+            <DeleteModal
+                open={openDeleteModal}
+                setOpen={setOpenDeleteModal}
+                title={tempProduct.title}
+                handleDelete={() => deleteProductHandler(tempProduct.id)}
+            />
+            {isLoading && (
+                <Backdrop open={isLoading}>
+                    <CircularProgress color='inherit' />
+                </Backdrop>
+            )}
+            {!isLoading && (
+                <Box p={2}>
+                    <Typography variant='h3' fontWeight={'bold'} mb={2}>
+                        產品列表
+                    </Typography>
+                    <Divider />
+                    <Stack direction={'row'} justifyContent={'flex-end'} my={2}>
+                        <Button
+                            variant='contained'
+                            color='warning'
+                            sx={{ fontWeight: 'bold' }}
+                            onClick={() => handleOpenProductModal('create', {})}
+                        >
+                            建立新商品
+                        </Button>
+                    </Stack>
+                    <TableContainer
+                        component={Paper}
+                        sx={{ boxShadow: 'none' }}
+                    >
+                        <Table sx={{ minWidth: 650 }} aria-label='simple table'>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell width={'20%'}>
+                                        <Typography
+                                            variant='subtitle1'
+                                            fontWeight={'bold'}
+                                        >
+                                            分類
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell width={'20%'}>
+                                        <Typography
+                                            variant='subtitle1'
+                                            fontWeight={'bold'}
+                                        >
+                                            名稱
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell width={'20%'}>
+                                        <Typography
+                                            variant='subtitle1'
+                                            fontWeight={'bold'}
+                                        >
+                                            售價
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell width={'20%'}>
+                                        <Typography
+                                            variant='subtitle1'
+                                            fontWeight={'bold'}
+                                        >
+                                            啟用狀態
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell width={'20%'}>
+                                        <Typography
+                                            variant='subtitle1'
+                                            fontWeight={'bold'}
                                         >
                                             編輯
-                                        </Button>
-                                        <Button
-                                            variant='outlined'
-                                            color='error'
-                                            sx={{ fontWeight: 'bold' }}
-                                        >
-                                            刪除
-                                        </Button>
-                                    </Stack>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-            {pagination && pagination.total_pages > 0 && (
-                <Pagination
-                    count={pagination.total_pages}
-                    color='warning'
-                    shape='rounded'
-                    sx={{ mt: 2 }}
-                    onChange={handlePageChange}
-                />
+                                        </Typography>
+                                    </TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {products.map((product) => (
+                                    <TableRow hover key={product.id}>
+                                        <TableCell>
+                                            {product.category}
+                                        </TableCell>
+                                        <TableCell>{product.title}</TableCell>
+                                        <TableCell>{product.price}</TableCell>
+                                        <TableCell>
+                                            {product.is_enabled
+                                                ? '啟用'
+                                                : '未啟用'}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Stack
+                                                direction={'row'}
+                                                spacing={1}
+                                            >
+                                                <Button
+                                                    variant='contained'
+                                                    color='warning'
+                                                    sx={{
+                                                        fontWeight: 'bold',
+                                                        boxShadow: 'none',
+                                                    }}
+                                                    onClick={() =>
+                                                        handleOpenProductModal(
+                                                            'edit',
+                                                            product
+                                                        )
+                                                    }
+                                                >
+                                                    編輯
+                                                </Button>
+                                                <Button
+                                                    variant='outlined'
+                                                    color='error'
+                                                    sx={{ fontWeight: 'bold' }}
+                                                    onClick={() =>
+                                                        handleOpenDeleteModal(
+                                                            product
+                                                        )
+                                                    }
+                                                >
+                                                    刪除
+                                                </Button>
+                                            </Stack>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                    {pagination && pagination.total_pages > 0 && (
+                        <Pagination
+                            count={pagination.total_pages}
+                            color='warning'
+                            shape='rounded'
+                            sx={{ mt: 2 }}
+                            onChange={handlePageChange}
+                        />
+                    )}
+                </Box>
             )}
-        </Box>
+        </React.Fragment>
     );
 };
 

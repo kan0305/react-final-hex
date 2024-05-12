@@ -4,7 +4,7 @@ import ROUTES from '../utils/route';
 const useProductService = () => {
     const http = useHttp();
 
-    const getAllProducts = async () => {
+    const getProducts = async () => {
         try {
             const result = await http.get(ROUTES.PRODUCTS.LIST);
             return result;
@@ -26,7 +26,22 @@ const useProductService = () => {
 
     const editProduct = async (productId, data) => {
         try {
-            const result = await http.put(ROUTES.PRODUCTS.EDIT + productId, data);
+            const result = await http.put(
+                ROUTES.PRODUCTS.EDIT + productId,
+                data
+            );
+            return result;
+        } catch (error) {
+            console.log(error);
+            return error.response;
+        }
+    };
+
+    const deleteProduct = async (productId) => {
+        try {
+            const result = await http.del(
+                ROUTES.PRODUCTS.DELETE + productId
+            );
             return result;
         } catch (error) {
             console.log(error);
@@ -42,9 +57,15 @@ const useProductService = () => {
             console.log(error);
             return error.response;
         }
-    }
+    };
 
-    return { getAllProducts, addProduct, editProduct, uploadImage };
+    return {
+        getProducts,
+        addProduct,
+        editProduct,
+        deleteProduct,
+        uploadImage,
+    };
 };
 
 export default useProductService;
