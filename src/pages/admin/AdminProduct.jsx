@@ -56,18 +56,22 @@ const AdminProduct = () => {
 
     const deleteProduct = deleteProductRef.current;
 
-    const getProductsHandler = useCallback(async () => {
-        setIsLoading(true);
+    const getProductsHandler = useCallback(
+        async (params) => {
+            console.log(params);
+            setIsLoading(true);
 
-        const result = await getProducts();
+            const result = await getProducts(params);
 
-        if (result.data && result.data.success) {
-            setProducts(result.data.products);
-            setPagination(result.data.pagination);
-        }
+            if (result.data && result.data.success) {
+                setProducts(result.data.products);
+                setPagination(result.data.pagination);
+            }
 
-        setIsLoading(false);
-    }, [getProducts]);
+            setIsLoading(false);
+        },
+        [getProducts]
+    );
 
     const deleteProductHandler = async (productId) => {
         const result = await deleteProduct(productId);
@@ -85,8 +89,9 @@ const AdminProduct = () => {
         }
     }, [isLogin, getProductsHandler]);
 
-    const handlePageChange = (event, value) => {
+    const handlePageChange = async (event, value) => {
         console.log(event, value);
+        getProductsHandler({ page: value });
     };
 
     const handleOpenProductModal = (type, tempProduct) => {
@@ -247,6 +252,7 @@ const AdminProduct = () => {
                     {pagination && pagination.total_pages > 0 && (
                         <Pagination
                             count={pagination.total_pages}
+                            page={pagination.current_page}
                             color='warning'
                             shape='rounded'
                             sx={{ mt: 2 }}

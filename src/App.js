@@ -7,6 +7,7 @@ function App() {
     return (
         <div>
             <Routes>
+                <Route path='/' element={<Navigate to="/login" />} />
                 <Route path='/login' element={<Login />} />
                 <Route path='/admin' element={<DashBoard />}>
                     {/* 產品列表 */}

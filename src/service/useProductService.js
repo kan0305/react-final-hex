@@ -4,9 +4,9 @@ import ROUTES from '../utils/route';
 const useProductService = () => {
     const http = useHttp();
 
-    const getProducts = async () => {
+    const getProducts = async (params = { page: 1 }) => {
         try {
-            const result = await http.get(ROUTES.PRODUCTS.LIST);
+            const result = await http.get(ROUTES.PRODUCTS.LIST, { params });
             return result;
         } catch (error) {
             console.log(error);
@@ -39,9 +39,7 @@ const useProductService = () => {
 
     const deleteProduct = async (productId) => {
         try {
-            const result = await http.del(
-                ROUTES.PRODUCTS.DELETE + productId
-            );
+            const result = await http.del(ROUTES.PRODUCTS.DELETE + productId);
             return result;
         } catch (error) {
             console.log(error);
