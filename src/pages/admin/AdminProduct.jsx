@@ -1,8 +1,9 @@
 import {
+    Backdrop,
     Box,
     Button,
+    CircularProgress,
     Divider,
-    Pagination,
     Paper,
     Stack,
     Table,
@@ -11,15 +12,14 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    Typography,
-    Backdrop,
-    CircularProgress,
+    Typography
 } from '@mui/material';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import useProductService from '../../service/useProductService';
-import { ProductModal } from '../../components/ProductModal';
 import { DeleteModal } from '../../components/DeleteModal';
+import { MyPagination } from '../../components/MyPagination';
+import { ProductModal } from '../../components/ProductModal';
+import useProductService from '../../service/useProductService';
 
 const AdminProduct = () => {
     const isLogin = useOutletContext();
@@ -250,12 +250,9 @@ const AdminProduct = () => {
                         </Table>
                     </TableContainer>
                     {pagination && pagination.total_pages > 0 && (
-                        <Pagination
+                        <MyPagination
                             count={pagination.total_pages}
                             page={pagination.current_page}
-                            color='warning'
-                            shape='rounded'
-                            sx={{ mt: 2 }}
                             onChange={handlePageChange}
                         />
                     )}
