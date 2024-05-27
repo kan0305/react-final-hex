@@ -1,5 +1,5 @@
+import React, { useEffect, useRef, useState } from 'react';
 import {
-    Backdrop,
     Box,
     Button,
     CircularProgress,
@@ -13,126 +13,99 @@ import {
     TableHead,
     TableRow,
     Typography,
+    Backdrop,
 } from '@mui/material';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
-import { DeleteModal } from '../../components/DeleteModal';
 import { MyPagination } from '../../components/MyPagination';
-import { ProductModal } from '../../components/ProductModal';
-import useProductService from '../../service/useProductService';
+import useCouponService from '../../service/useCouponService';
+import { DeleteModal } from '../../components/DeleteModal';
+import { CouponModal } from '../../components/CouponModal';
 
-const AdminProduct = () => {
-    const isLogin = useOutletContext();
+export const AdminCoupons = () => {
+    const [loading, setLoading] = useState(false);
 
-    const [isLoading, setIsLoading] = useState(false);
-
-    const [products, setProducts] = useState([]);
+    const [coupons, setCoupons] = useState([]);
 
     const [pagination, setPagination] = useState({});
 
-    const [openProductModal, setOpenProductModal] = useState(false);
+    const [type, setType] = useState('create');
+
+    const [tempCoupon, setTempCoupon] = useState({});
+
+    const [openCouponModal, setOpenCouponModal] = useState(false);
 
     const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
-    const [tempProduct, setTempProduct] = useState({});
+    const couponService = useCouponService();
 
-    const [type, setType] = useState('');
+    const getCouponsRef = useRef(null);
 
-    const productService = useProductService();
+    const deleteCouponRef = useRef(null);
 
-    const getProductsRef = useRef(null);
+    if (!getCouponsRef.current) getCouponsRef.current = couponService.getCoupons;
 
-    const deleteProductRef = useRef(null);
+    if (!deleteCouponRef.current) deleteCouponRef.current = couponService.deleteCoupon;
 
-    // 以 getProductsRef 紀錄 getProducts，防止重複渲染
-    if (!getProductsRef.current) getProductsRef.current = productService.getProducts;
-
-    // 以 deleteProductRef 紀錄 deleteProduct，防止重複渲染
-    if (!deleteProductRef.current) deleteProductRef.current = productService.deleteProduct;
-
-    const getProducts = getProductsRef.current;
-
-    const deleteProduct = deleteProductRef.current;
-
-    const getProductsHandler = useCallback(
-        async (params) => {
-            console.log(params);
-            setIsLoading(true);
-
-            const result = await getProducts(params);
-
+    const getCoupons = async (params = { page: 1 }) => {
+        setLoading(true);
+        try {
+            const result = await getCouponsRef.current(params);
             if (result.data && result.data.success) {
-                setProducts(result.data.products);
+                setCoupons(result.data.coupons);
                 setPagination(result.data.pagination);
             }
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-            setIsLoading(false);
-        },
-        [getProducts]
-    );
-
-    const deleteProductHandler = async (productId) => {
-        const result = await deleteProduct(productId);
-
-        if (result.data.success) {
-            getProductsHandler();
+    const handleDelete = async () => {
+        const result = await deleteCouponRef.current(tempCoupon.id);
+        if (result.data && result.data.success) {
+            getCoupons();
         } else {
             alert(result.data.message);
         }
     };
 
-    useEffect(() => {
-        if (isLogin) {
-            getProductsHandler();
-        }
-    }, [isLogin, getProductsHandler]);
-
-    const handlePageChange = async (event, value) => {
-        console.log(event, value);
-        getProductsHandler({ page: value });
+    const handlePageChange = (page) => {
+        getCoupons({ page });
     };
 
-    const handleOpenProductModal = (type, tempProduct) => {
-        setOpenProductModal(true);
-
+    const handleOpenCouponModal = (type, tempCoupon) => {
+        setOpenCouponModal(true);
         if (type === 'edit') {
             setType('edit');
-            setTempProduct(tempProduct);
+            setTempCoupon(tempCoupon);
         } else if (type === 'create') {
             setType('create');
-            setTempProduct({});
+            setTempCoupon({});
         }
     };
 
-    const handleOpenDeleteModal = (tempProduct) => {
+    const handleOpenDeleteModal = (coupon) => {
         setOpenDeleteModal(true);
-        setTempProduct(tempProduct);
+        setTempCoupon(coupon);
     };
+
+    useEffect(() => {
+        getCoupons();
+    }, []);
 
     return (
         <React.Fragment>
-            <ProductModal
-                open={openProductModal}
-                setOpen={setOpenProductModal}
-                getProducts={getProductsHandler}
-                type={type}
-                tempProduct={tempProduct}
-            />
-            <DeleteModal
-                open={openDeleteModal}
-                setOpen={setOpenDeleteModal}
-                title={tempProduct.title}
-                handleDelete={() => deleteProductHandler(tempProduct.id)}
-            />
-            {isLoading && (
-                <Backdrop open={isLoading}>
+            <CouponModal open={openCouponModal} setOpen={setOpenCouponModal} getCoupons={getCoupons} type={type} tempCoupon={tempCoupon} />
+            <DeleteModal open={openDeleteModal} setOpen={setOpenDeleteModal} title={tempCoupon.title} handleDelete={handleDelete} />
+            {loading && (
+                <Backdrop open={loading}>
                     <CircularProgress color='inherit' />
                 </Backdrop>
             )}
-            {!isLoading && (
+            {!loading && (
                 <Box p={2}>
                     <Typography variant='h3' fontWeight={'bold'} mb={2}>
-                        產品列表
+                        優惠券列表
                     </Typography>
                     <Divider />
                     <Stack direction={'row'} justifyContent={'flex-end'} my={2}>
@@ -140,36 +113,41 @@ const AdminProduct = () => {
                             variant='contained'
                             color='warning'
                             sx={{ fontWeight: 'bold' }}
-                            onClick={() => handleOpenProductModal('create', {})}
+                            onClick={() => handleOpenCouponModal('create')}
                         >
-                            建立新商品
+                            建立新優惠券
                         </Button>
                     </Stack>
                     <TableContainer component={Paper} sx={{ boxShadow: 'none' }}>
                         <Table sx={{ minWidth: 650 }} aria-label='simple table'>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell width={'20%'}>
+                                    <TableCell sx={{ width: 100 / 6 + '%' }}>
                                         <Typography variant='subtitle1' fontWeight={'bold'}>
-                                            分類
+                                            標題
                                         </Typography>
                                     </TableCell>
-                                    <TableCell width={'20%'}>
+                                    <TableCell sx={{ width: 100 / 6 + '%' }}>
                                         <Typography variant='subtitle1' fontWeight={'bold'}>
-                                            名稱
+                                            折扣
                                         </Typography>
                                     </TableCell>
-                                    <TableCell width={'20%'}>
+                                    <TableCell sx={{ width: 100 / 6 + '%' }}>
                                         <Typography variant='subtitle1' fontWeight={'bold'}>
-                                            售價
+                                            到期日
                                         </Typography>
                                     </TableCell>
-                                    <TableCell width={'20%'}>
+                                    <TableCell sx={{ width: 100 / 6 + '%' }}>
+                                        <Typography variant='subtitle1' fontWeight={'bold'}>
+                                            優惠碼
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell sx={{ width: 100 / 6 + '%' }}>
                                         <Typography variant='subtitle1' fontWeight={'bold'}>
                                             啟用狀態
                                         </Typography>
                                     </TableCell>
-                                    <TableCell width={'20%'}>
+                                    <TableCell sx={{ width: 100 / 6 + '%' }}>
                                         <Typography variant='subtitle1' fontWeight={'bold'}>
                                             編輯
                                         </Typography>
@@ -177,12 +155,17 @@ const AdminProduct = () => {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {products.map((product) => (
-                                    <TableRow hover key={product.id}>
-                                        <TableCell>{product.category}</TableCell>
-                                        <TableCell>{product.title}</TableCell>
-                                        <TableCell>{product.price}</TableCell>
-                                        <TableCell>{product.is_enabled ? '啟用' : '未啟用'}</TableCell>
+                                {coupons.map((coupon) => (
+                                    <TableRow hover key={coupon.id}>
+                                        <TableCell>{coupon.title}</TableCell>
+                                        <TableCell>{coupon.percent}</TableCell>
+                                        <TableCell>
+                                            {`${new Date(coupon.due_date).getFullYear()}-${(new Date(coupon.due_date).getMonth() + 1)
+                                                .toString()
+                                                .padStart(2, '0')}-${new Date(coupon.due_date).getDate().toString().padStart(2, '0')}`}
+                                        </TableCell>
+                                        <TableCell>{coupon.code}</TableCell>
+                                        <TableCell>{coupon.is_enabled ? '啟用' : '未啟用'}</TableCell>
                                         <TableCell>
                                             <Stack direction={'row'} spacing={1}>
                                                 <Button
@@ -192,7 +175,7 @@ const AdminProduct = () => {
                                                         fontWeight: 'bold',
                                                         boxShadow: 'none',
                                                     }}
-                                                    onClick={() => handleOpenProductModal('edit', product)}
+                                                    onClick={() => handleOpenCouponModal('edit', coupon)}
                                                 >
                                                     編輯
                                                 </Button>
@@ -200,7 +183,7 @@ const AdminProduct = () => {
                                                     variant='outlined'
                                                     color='error'
                                                     sx={{ fontWeight: 'bold' }}
-                                                    onClick={() => handleOpenDeleteModal(product)}
+                                                    onClick={() => handleOpenDeleteModal(coupon)}
                                                 >
                                                     刪除
                                                 </Button>
@@ -219,5 +202,3 @@ const AdminProduct = () => {
         </React.Fragment>
     );
 };
-
-export default AdminProduct;

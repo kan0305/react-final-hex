@@ -13,10 +13,18 @@ import {
     Toolbar,
     Typography,
 } from '@mui/material';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import useLoginService from '../../service/useLoginService';
+
+const CutomLink = styled(NavLink)({
+    textDecoration: 'none',
+    color: 'inherit',
+    '&.active': {
+        color: '#007bff',
+    },
+});
 
 const theme = createTheme({
     palette: {
@@ -70,17 +78,9 @@ const DashBoard = () => {
     return (
         <ThemeProvider theme={theme}>
             <Box sx={{ flexGrow: 1 }}>
-                <AppBar
-                    position='static'
-                    color='primary'
-                    sx={{ boxShadow: 'none' }}
-                >
+                <AppBar position='static' color='primary' sx={{ boxShadow: 'none' }}>
                     <Toolbar>
-                        <Typography
-                            variant='h6'
-                            component='div'
-                            sx={{ flexGrow: 1 }}
-                        >
+                        <Typography variant='h6' component='div' sx={{ flexGrow: 1 }}>
                             Uber Eat 後臺管理系統
                         </Typography>
                         <Button color='inherit' onClick={logoutHandler}>
@@ -92,23 +92,29 @@ const DashBoard = () => {
             <Stack direction={'row'} minHeight={'calc(100vh - 64px)'}>
                 <Box width={'300px'} bgcolor={'#f8f9fa'}>
                     <List>
-                        <ListItem sx={{ bgcolor: '#fff' }}>
-                            <ListItemButton>
-                                <ListItemText primary='產品列表' />
-                            </ListItemButton>
-                        </ListItem>
+                        <CutomLink to={'/admin/products'}>
+                            <ListItem sx={{ bgcolor: '#fff' }}>
+                                <ListItemButton>
+                                    <ListItemText primary='產品列表' />
+                                </ListItemButton>
+                            </ListItem>
+                        </CutomLink>
                         <Divider />
-                        <ListItem sx={{ bgcolor: '#fff' }}>
-                            <ListItemButton>
-                                <ListItemText primary='優惠卷列表' />
-                            </ListItemButton>
-                        </ListItem>
+                        <CutomLink to={'/admin/coupons'}>
+                            <ListItem sx={{ bgcolor: '#fff' }}>
+                                <ListItemButton>
+                                    <ListItemText primary='優惠卷列表' />
+                                </ListItemButton>
+                            </ListItem>
+                        </CutomLink>
                         <Divider />
-                        <ListItem sx={{ bgcolor: '#fff' }}>
-                            <ListItemButton>
-                                <ListItemText primary='訂單列表' />
-                            </ListItemButton>
-                        </ListItem>
+                        <CutomLink to={'/admin/orders'}>
+                            <ListItem sx={{ bgcolor: '#fff' }}>
+                                <ListItemButton>
+                                    <ListItemText primary='訂單列表' />
+                                </ListItemButton>
+                            </ListItem>
+                        </CutomLink>
                         <Divider />
                     </List>
                 </Box>

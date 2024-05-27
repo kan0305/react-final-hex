@@ -39,13 +39,7 @@ const ImageInput = styled('img')({
     objectFit: 'cover',
 });
 
-export const ProductModal = ({
-    open,
-    setOpen,
-    getProducts,
-    type,
-    tempProduct,
-}) => {
+export const ProductModal = ({ open, setOpen, getProducts, type, tempProduct }) => {
     const [imageObj, setImageObj] = useState({ loading: false, url: '' });
 
     const { handleSubmit, reset, control } = useForm({
@@ -91,16 +85,13 @@ export const ProductModal = ({
     const uploadFileRef = useRef(null);
 
     // 以 addProductRef 紀錄 addProduct，防止重複渲染
-    if (!addProductRef.current)
-        addProductRef.current = productService.addProduct;
+    if (!addProductRef.current) addProductRef.current = productService.addProduct;
 
     // 以 editProductRef 紀錄 editProduct，防止重複渲染
-    if (!editProductRef.current)
-        editProductRef.current = productService.editProduct;
+    if (!editProductRef.current) editProductRef.current = productService.editProduct;
 
     // 以 uploadFileRef 紀錄 uploadFile，防止重複渲染
-    if (!uploadFileRef.current)
-        uploadFileRef.current = productService.uploadImage;
+    if (!uploadFileRef.current) uploadFileRef.current = productService.uploadImage;
 
     const addProduct = addProductRef.current;
 
@@ -195,9 +186,7 @@ export const ProductModal = ({
                                 control={control}
                                 render={({ field }) => (
                                     <Box>
-                                        <InputLabel htmlFor='imageUrl'>
-                                            輸入圖片網址
-                                        </InputLabel>
+                                        <InputLabel htmlFor='imageUrl'>輸入圖片網址</InputLabel>
                                         <OutlinedInput
                                             type='url'
                                             id='imageUrl'
@@ -210,9 +199,7 @@ export const ProductModal = ({
                                 )}
                             />
                             <Box>
-                                <InputLabel htmlFor='customFile'>
-                                    或上傳圖檔
-                                </InputLabel>
+                                <InputLabel htmlFor='customFile'>或上傳圖檔</InputLabel>
                                 <Button
                                     component='label'
                                     role={undefined}
@@ -221,11 +208,7 @@ export const ProductModal = ({
                                     startIcon={<CloudUploadIcon />}
                                 >
                                     Upload file
-                                    <VisuallyHiddenInput
-                                        type='file'
-                                        id='customFile'
-                                        onChange={handleUploadFile}
-                                    />
+                                    <VisuallyHiddenInput type='file' id='customFile' onChange={handleUploadFile} />
                                 </Button>
                                 <Box
                                     width={'100%'}
@@ -238,12 +221,7 @@ export const ProductModal = ({
                                 >
                                     {imageObj.loading && <CircularProgress />}
 
-                                    {imageObj.url && (
-                                        <ImageInput
-                                            src={imageObj.url}
-                                            alt='preview'
-                                        />
-                                    )}
+                                    {imageObj.url && <ImageInput src={imageObj.url} alt='preview' />}
                                 </Box>
                             </Box>
                         </Stack>
@@ -255,17 +233,8 @@ export const ProductModal = ({
                                 control={control}
                                 render={({ field }) => (
                                     <Box>
-                                        <InputLabel htmlFor='title'>
-                                            標題
-                                        </InputLabel>
-                                        <OutlinedInput
-                                            type='text'
-                                            id='title'
-                                            size='small'
-                                            fullWidth
-                                            placeholder='請輸入標題'
-                                            {...field}
-                                        />
+                                        <InputLabel htmlFor='title'>標題</InputLabel>
+                                        <OutlinedInput type='text' id='title' size='small' fullWidth placeholder='請輸入標題' {...field} />
                                     </Box>
                                 )}
                             />
@@ -274,15 +243,8 @@ export const ProductModal = ({
                                     name='category'
                                     control={control}
                                     render={({ field }) => (
-                                        <Grid
-                                            item
-                                            sm={6}
-                                            xs={12}
-                                            sx={{ pr: { sm: 1, xs: 0 } }}
-                                        >
-                                            <InputLabel htmlFor='category'>
-                                                分類
-                                            </InputLabel>
+                                        <Grid item sm={6} xs={12} sx={{ pr: { sm: 1, xs: 0 } }}>
+                                            <InputLabel htmlFor='category'>分類</InputLabel>
                                             <OutlinedInput
                                                 type='text'
                                                 id='category'
@@ -298,15 +260,8 @@ export const ProductModal = ({
                                     name='unit'
                                     control={control}
                                     render={({ field }) => (
-                                        <Grid
-                                            item
-                                            sm={6}
-                                            xs={12}
-                                            sx={{ pl: { sm: 1, xs: 0 } }}
-                                        >
-                                            <InputLabel htmlFor='unit'>
-                                                單位
-                                            </InputLabel>
+                                        <Grid item sm={6} xs={12} sx={{ pl: { sm: 1, xs: 0 } }}>
+                                            <InputLabel htmlFor='unit'>單位</InputLabel>
                                             <OutlinedInput
                                                 type='text'
                                                 id='unit'
@@ -324,15 +279,8 @@ export const ProductModal = ({
                                     name='origin_price'
                                     control={control}
                                     render={({ field }) => (
-                                        <Grid
-                                            item
-                                            sm={6}
-                                            xs={12}
-                                            sx={{ pr: { sm: 1, xs: 0 } }}
-                                        >
-                                            <InputLabel htmlFor='origin_price'>
-                                                原價
-                                            </InputLabel>
+                                        <Grid item sm={6} xs={12} sx={{ pr: { sm: 1, xs: 0 } }}>
+                                            <InputLabel htmlFor='origin_price'>原價</InputLabel>
                                             <OutlinedInput
                                                 type='number'
                                                 id='origin_price'
@@ -348,15 +296,8 @@ export const ProductModal = ({
                                     name='price'
                                     control={control}
                                     render={({ field }) => (
-                                        <Grid
-                                            item
-                                            sm={6}
-                                            xs={12}
-                                            sx={{ pl: { sm: 1, xs: 0 } }}
-                                        >
-                                            <InputLabel htmlFor='price'>
-                                                售價
-                                            </InputLabel>
+                                        <Grid item sm={6} xs={12} sx={{ pl: { sm: 1, xs: 0 } }}>
+                                            <InputLabel htmlFor='price'>售價</InputLabel>
                                             <OutlinedInput
                                                 type='number'
                                                 id='price'
@@ -375,9 +316,7 @@ export const ProductModal = ({
                                 control={control}
                                 render={({ field }) => (
                                     <Box>
-                                        <InputLabel htmlFor='description'>
-                                            產品描述
-                                        </InputLabel>
+                                        <InputLabel htmlFor='description'>產品描述</InputLabel>
                                         <OutlinedInput
                                             type='text'
                                             id='description'
@@ -396,9 +335,7 @@ export const ProductModal = ({
                                 control={control}
                                 render={({ field }) => (
                                     <Box>
-                                        <InputLabel htmlFor='content'>
-                                            產品說明
-                                        </InputLabel>
+                                        <InputLabel htmlFor='content'>產品說明</InputLabel>
                                         <OutlinedInput
                                             type='text'
                                             id='content'
@@ -417,37 +354,17 @@ export const ProductModal = ({
                             name='is_enabled'
                             control={control}
                             render={({ field: { value, ...field } }) => (
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            size='small'
-                                            checked={value}
-                                            {...field}
-                                        />
-                                    }
-                                    label='是否啟用'
-                                />
+                                <FormControlLabel control={<Checkbox size='small' checked={value} {...field} />} label='是否啟用' />
                             )}
                         />
                     </Grid>
                 </Grid>
             </DialogContent>
             <DialogActions sx={{ px: 3, pb: 2 }}>
-                <Button
-                    aria-label='close'
-                    variant='outlined'
-                    size='large'
-                    onClick={(e, reason) => handleClose(e, reason)}
-                >
+                <Button aria-label='close' variant='outlined' size='large' onClick={(e, reason) => handleClose(e, reason)}>
                     關閉
                 </Button>
-                <Button
-                    type='submit'
-                    aria-label='add'
-                    variant='contained'
-                    size='large'
-                    color='warning'
-                >
+                <Button type='submit' aria-label='add' variant='contained' size='large' color='warning'>
                     儲存
                 </Button>
             </DialogActions>
