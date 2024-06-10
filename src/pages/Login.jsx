@@ -1,15 +1,4 @@
-import {
-    Alert,
-    Box,
-    Button,
-    CircularProgress,
-    Container,
-    Grid,
-    InputLabel,
-    Stack,
-    TextField,
-    Typography,
-} from '@mui/material';
+import { Alert, Box, Button, CircularProgress, Container, Grid, InputLabel, Stack, TextField, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -31,6 +20,8 @@ const Login = () => {
 
         const result = await login(formData);
 
+        console.log(result);
+
         if (result.data && result.data.success) {
             navigator('/admin/products');
         } else {
@@ -45,9 +36,7 @@ const Login = () => {
     };
 
     const isEmptyObject = (obj) => {
-        return (
-            obj && Object.keys(obj).length === 0 && obj.constructor === Object
-        );
+        return obj && Object.keys(obj).length === 0 && obj.constructor === Object;
     };
 
     useEffect(() => {
@@ -65,21 +54,10 @@ const Login = () => {
             <Grid container justifyContent={'center'}>
                 <Grid item md={6}>
                     <Box component='form' onSubmit={handleSubmit(onSubmit)}>
-                        <Typography
-                            variant='h3'
-                            align='left'
-                            fontWeight={'bold'}
-                            mb={2}
-                        >
+                        <Typography variant='h3' align='left' fontWeight={'bold'} mb={2}>
                             登入帳號
                         </Typography>
-                        {loginState.message && !loginState.success && (
-                            <Alert severity='error'>
-                                {loginState.message
-                                    ? loginState.message
-                                    : '登入失敗'}
-                            </Alert>
-                        )}
+                        {!isEmptyObject(loginState) && !loginState.success && <Alert severity='error'>登入失敗</Alert>}
                         <Stack direction={'column'} alignItems={'left'} mb={2}>
                             <InputLabel htmlFor='email'>Email</InputLabel>
                             <TextField
@@ -107,11 +85,7 @@ const Login = () => {
                             />
                         </Stack>
                         <Box position={'relative'}>
-                            <Button
-                                variant='contained'
-                                type='submit'
-                                disabled={isLoading}
-                            >
+                            <Button variant='contained' type='submit' disabled={isLoading}>
                                 登入
                                 {isLoading && (
                                     <CircularProgress

@@ -1,14 +1,15 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+
 import Login from './pages/Login';
+import AdminCoupons from './pages/admin/AdminCoupons';
 import AdminProduct from './pages/admin/AdminProduct';
 import DashBoard from './pages/admin/DashBoard';
-import { AdminCoupons } from './pages/admin/AdminCoupons';
 
 function App() {
     return (
         <div>
             <Routes>
-                <Route path='/' element={<Navigate to='/login' />} />
+                <Route path='/' element={<Navigate to='/admin' />} />
                 <Route path='/login' element={<Login />} />
                 <Route path='/admin' element={<DashBoard />}>
                     {/* 產品列表 */}

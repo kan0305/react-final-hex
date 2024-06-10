@@ -14,9 +14,12 @@ import {
     Typography,
 } from '@mui/material';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Message } from '../../components/Message';
 import useLoginService from '../../service/useLoginService';
+import { setlogin } from '../../slice/loginSlice';
 
 const CutomLink = styled(NavLink)({
     textDecoration: 'none',
@@ -37,34 +40,23 @@ const theme = createTheme({
 const DashBoard = () => {
     const navigator = useNavigate();
 
-    const [isLogin, setIsLogin] = useState(false);
+    const dispatch = useDispatch();
 
-    const checkLoginRef = useRef(null);
+    const { login } = useSelector((state) => state.login);
+
+    const { loading } = useSelector((state) => state.loading);
 
     const loginService = useLoginService();
 
-    // 以 checkLoginRef 紀錄 checkLogin，防止重複渲染
+    const checkLoginRef = useRef();
+
     if (!checkLoginRef.current) checkLoginRef.current = loginService.checkLogin;
-
-    const checkLogin = checkLoginRef.current;
-
-    const checkLoginHandler = useCallback(async () => {
-        const result = await checkLogin();
-        if (result.data && result.data.success) {
-            setIsLogin(true);
-        } else {
-            alert('請重新登入');
-            setIsLogin(false);
-            navigator('/login');
-        }
-    }, [checkLogin, navigator]);
 
     const logoutHandler = async () => {
         const result = await loginService.logout();
 
         if (result.data && result.data.success) {
             alert('登出成功');
-            setIsLogin(false);
             navigator('/login');
         } else {
             alert('登出失敗');
@@ -72,11 +64,31 @@ const DashBoard = () => {
     };
 
     useEffect(() => {
-        checkLoginHandler();
-    }, [checkLoginHandler]);
+        const checkLogin = async () => {
+            try {
+                const result = await checkLoginRef.current();
+                if (result.data && result.data.success) {
+                    dispatch(setlogin(true));
+                } else {
+                    alert('請重新登入');
+                    dispatch(setlogin(false));
+                    navigator('/login');
+                }
+            } catch (error) {
+                console.log(error);
+                dispatch(setlogin(false));
+                navigator('/login');
+            }
+        };
+        checkLogin();
+    }, [dispatch, navigator]);
 
     return (
         <ThemeProvider theme={theme}>
+            <Message />
+            <Backdrop open={loading} sx={{ zIndex: (theme) => theme.zIndex.modal + 1 }}>
+                <CircularProgress color='inherit' />
+            </Backdrop>
             <Box sx={{ flexGrow: 1 }}>
                 <AppBar position='static' color='primary' sx={{ boxShadow: 'none' }}>
                     <Toolbar>
@@ -118,15 +130,7 @@ const DashBoard = () => {
                         <Divider />
                     </List>
                 </Box>
-                <Box flexGrow={1}>
-                    {!isLogin ? (
-                        <Backdrop open={!isLogin}>
-                            <CircularProgress color='inherit' />
-                        </Backdrop>
-                    ) : (
-                        <Outlet context={isLogin} />
-                    )}
-                </Box>
+                <Box flexGrow={1}>{login && <Outlet />}</Box>
             </Stack>
         </ThemeProvider>
     );
